@@ -1,20 +1,25 @@
+"""
+🍌 Sistema de Detección de Enfermedades del Banano
+Interfaz web con Streamlit
+"""
+
 import streamlit as st
 import numpy as np
 from PIL import Image
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import time
+import os
 
-
-#Configuración de la pagina
-
+# ========== CONFIGURACIÓN DE LA PÁGINA ==========
 st.set_page_config(
-    page_title="Detencion de Enfermedades del Banano",
+    page_title="Detección de Enfermedades del Banano",  # Corregido: "Detección" no "Detencion"
     page_icon="🍌",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
+# ========== ESTILOS CSS ==========
 st.markdown("""
     <style>
     .main {
@@ -68,14 +73,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-#Informacion detallada de enfermedades
-
-DISEASE_INFO ={
+# ========== INFORMACIÓN DETALLADA DE ENFERMEDADES ==========
+DISEASE_INFO = {
     "Cordana": {
-        "icon" : "🟤",
-        "color" : "#8B4513",
-        "nombre_cientifico" : "Cordama musae",
+        "icon": "🟤",
+        "color": "#8B4513",
+        "nombre_cientifico": "Cordana musae",  # Corregido: "Cordana" no "Cordama"
         "descripcion": """
         La **Cordana** es una enfermedad fúngica que causa manchas foliares en las hojas del banano. 
         Se caracteriza por lesiones ovaladas con centro gris y bordes amarillentos.
@@ -262,68 +265,107 @@ DISEASE_INFO ={
     }
 }
 
-#Funciones
+# ========== FUNCIONES ==========
 
 @st.cache_resource
 def load_trained_model():
-    """"Carga el modelo entreanado"""
-    try:
-        model = load_model('models/best_model.h5')
-        return model
-    except:
-        return None
+    """Carga el modelo entrenado con manejo de compatibilidad"""
+
+    # Buscar modelos disponibles
+    model_paths = [
+        'models/keras_model.h5'
+    ]
+
+    for model_path in model_paths:
+        if not os.path.exists(model_path):
+            continue
+
+        try:
+            # Intentar cargar sin compilar (para compatibilidad)
+            model = load_model(model_path, compile=False)
+
+            # Recompilar manualmente
+            model.compile(
+                optimizer='adam',
+                loss='categorical_crossentropy',
+                metrics=['accuracy']
+            )
+
+            st.sidebar.success(f"✅ Modelo cargado: {model_path}")
+            return model
+
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Error con {model_path}: {str(e)[:50]}...")
+            continue
+
+    # Si ninguno funcionó
+    return None
+
 
 def preprocess_image(image):
-    """"Preprocesar la imagen de entrada"""
-    img = image.resize((224,224))
-    img_array = np.array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = img_array / 255.0
-    return img_array
+    """Preprocesa la imagen para el modelo"""
 
-#Sidebar
+    try:
+        # 1. Convertir a RGB
+        if image.mode != 'RGB':
+            rgb_image = Image.new('RGB', image.size, (255, 255, 255))
 
+            if image.mode == 'RGBA':
+                rgb_image.paste(image, (0, 0), image)
+            else:
+                rgb_image.paste(image.convert('RGB'))
+
+            image = rgb_image
+
+        # 2. Redimensionar
+        img = image.resize((224, 224), Image.Resampling.LANCZOS)
+
+        # 3. Convertir a numpy array
+        img_array = np.array(img, dtype=np.float32)
+
+        # 4. Verificar que solo tenga 3 canales
+        if len(img_array.shape) == 3 and img_array.shape[2] == 4:
+            img_array = img_array[:, :, :3]
+
+        # 5. Verificar dimensiones
+        assert img_array.shape == (224, 224, 3), f"Shape incorrecto: {img_array.shape}"
+
+        # 6. Normalizar
+        img_array = img_array / 255.0
+
+        # 7. Añadir dimensión de batch
+        img_array = np.expand_dims(img_array, axis=0)
+
+        return img_array
+
+    except Exception as e:
+        st.error(f"Error procesando imagen: {e}")
+        return None
+
+
+# ========== SIDEBAR ==========
 with st.sidebar:
-    st.markdown("<h1 style=''text-align: center;'>🍌</h1> ", unsafe_allow_html=True)
-    st.header("Guía de Uso")
-
+    st.image("https://img.icons8.com/color/96/000000/banana.png", width=100)
+    st.header("ℹ️ Información")
     st.markdown("""
-       ### 📤 Paso 1: Subir imagen
-       Selecciona una foto clara de la hoja de banano
+    ### Enfermedades detectables:
+    - 🟤 **Cordana**
+    - 🟢 **Healthy** (Saludable)
+    - 🟡 **Pestalotiopsis**
+    - ⚫ **Sigatoka**
+    
+    ### Cómo usar:
+    1. Sube una imagen de hoja de banano
+    2. Presiona "Analizar Imagen"
+    3. Obtén diagnóstico y tratamiento
+    
+    ---
+    **Desarrollado por:** Roger Cornejo  
+    **Universidad:** [Tu Universidad]  
+    **Año:** 2025
+    """)
 
-       ### 🔍 Paso 2: Analizar
-       Presiona el botón "Analizar Imagen"
-
-       ### 💊 Paso 3: Tratamiento
-       Sigue las recomendaciones específicas
-
-       ---
-
-       ### 🦠 Enfermedades detectables:
-       """)
-
-    for disease, info in DISEASE_INFO.items():
-        st.markdown(f"{info['icon']} **{disease}**")
-
-    st.markdown("""
-       ---
-
-       ### ⚙️ Tecnología:
-       - 🧠 Deep Learning (CNN)
-       - 📊 TensorFlow 2.x
-       - 🎯 EfficientNetB0
-       - 💻 Streamlit
-
-       ---
-
-       ### 👨‍💻 Desarrollado por:
-       **[Roger Cornejo]**  
-       [Univerisidad Estatal de Milagro]  
-       2025
-       """)
-
-#Titulo principal
-
+# ========== TÍTULO PRINCIPAL ==========
 st.markdown("""
     <h1>🍌 Sistema Inteligente de Detección de Enfermedades del Banano</h1>
     <p style='text-align: center; font-size: 18px; color: #555; margin-bottom: 30px;'>
@@ -331,11 +373,11 @@ st.markdown("""
     </p>
 """, unsafe_allow_html=True)
 
-#interfaz principal
-
+# ========== INTERFAZ PRINCIPAL ==========
 col1, col2 = st.columns([1, 1], gap="large")
+
 with col1:
-    st.markdown("Cargar imagen de hoja")
+    st.markdown("### 📤 Cargar Imagen de Hoja")
 
     uploaded_file = st.file_uploader(
         "Arrastra aquí tu imagen o haz clic para seleccionar",
@@ -345,160 +387,171 @@ with col1:
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Imagen de hoja cargada correctamente", use_column_width=True)
+        st.image(image, caption="✅ Imagen cargada correctamente", use_container_width=True)
 
+        # Info de imagen
+        st.markdown(f"""
+        <div style='background: white; padding: 15px; border-radius: 10px; margin-top: 10px;'>
+            <b>📏 Resolución:</b> {image.size[0]} x {image.size[1]} px<br>
+            <b>📁 Formato:</b> {image.format}<br>
+            <b>💾 Tamaño:</b> {uploaded_file.size / 1024:.1f} KB
+        </div>
+        """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("Analisis y Diagnostico")
+    st.markdown("### 🔬 Análisis y Diagnóstico")
 
-if uploaded_file is None:
-    st.info("👈 Por favor, sube una imagen en el panel izquierdo para comenzar")
-else:
-    model = load_trained_model()
+    if uploaded_file is None:
+        st.info("👈 Por favor, sube una imagen en el panel izquierdo para comenzar")
+    else:
+        model = load_trained_model()
 
-    if model is None:
-        st.error("""
+        if model is None:
+            st.error("""
             ⚠️ **Modelo no encontrado**
-
+            
             Necesitas entrenar el modelo primero:
 ```bash
-            python src/train_basic.py
+            python entrenamiento.py
 ```
+            
+            O verifica que exista: `models/best_model.h5` o `models/best_model.keras`
             """)
-    else:
-        if st.button("🔍 ANALIZAR IMAGEN", type="primary", use_container_width=True):
+        else:
+            if st.button("🔍 ANALIZAR IMAGEN", type="primary", use_container_width=True):
 
-            # Barra de progreso
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+                # Barra de progreso
+                progress_bar = st.progress(0)
+                status_text = st.empty()
 
-            status_text.text("🧠 Cargando imagen...")
-            progress_bar.progress(20)
-            time.sleep(0.3)
+                status_text.text("🧠 Cargando imagen...")
+                progress_bar.progress(20)
+                time.sleep(0.3)
 
-            status_text.text("🔬 Preprocesando datos...")
-            img_array = preprocess_image(image)
-            progress_bar.progress(40)
-            time.sleep(0.3)
+                status_text.text("🔬 Preprocesando datos...")
+                img_array = preprocess_image(image)
 
-            status_text.text("🤖 Ejecutando modelo de IA...")
-            predictions = model.predict(img_array, verbose=0)
-            progress_bar.progress(70)
-            time.sleep(0.3)
+                if img_array is None:
+                    st.error("No se pudo procesar la imagen")
+                    progress_bar.empty()
+                    status_text.empty()
+                else:
+                    progress_bar.progress(40)
+                    time.sleep(0.3)
 
-            status_text.text("📊 Analizando resultados...")
-            predicted_class_idx = np.argmax(predictions)
-            confidence = predictions[0][predicted_class_idx] * 100
+                    status_text.text("🤖 Ejecutando modelo de IA...")
+                    predictions = model.predict(img_array, verbose=0)
+                    progress_bar.progress(70)
+                    time.sleep(0.3)
 
-            disease_names = list(DISEASE_INFO.keys())
-            predicted_disease = disease_names[predicted_class_idx]
-            disease_data = DISEASE_INFO[predicted_disease]
+                    status_text.text("📊 Analizando resultados...")
+                    predicted_class_idx = np.argmax(predictions)
+                    confidence = predictions[0][predicted_class_idx] * 100
 
-            progress_bar.progress(100)
-            status_text.text("✅ ¡Análisis completado!")
-            time.sleep(0.5)
+                    disease_names = list(DISEASE_INFO.keys())
+                    predicted_disease = disease_names[predicted_class_idx]
+                    disease_data = DISEASE_INFO[predicted_disease]
 
-            progress_bar.empty()
-            status_text.empty()
+                    progress_bar.progress(100)
+                    status_text.text("✅ ¡Análisis completado!")
+                    time.sleep(0.5)
 
-            # ========== RESULTADO PRINCIPAL ==========
-            box_class = "healthy-box" if predicted_disease == "Healthy" else "disease-box"
+                    progress_bar.empty()
+                    status_text.empty()
 
-            st.markdown(f"""
-                <div class='{box_class}'>
-                    <h1 style='font-size: 48px; margin: 0;'>{disease_data['icon']}</h1>
-                    <h2 style='margin: 10px 0;'>{predicted_disease}</h2>
-                    <h3 style='margin: 5px 0;'>Confianza: {confidence:.1f}%</h3>
-                    <p style='font-style: italic; margin-top: 10px;'>{disease_data['nombre_cientifico']}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                    # ========== RESULTADO PRINCIPAL ==========
+                    box_class = "healthy-box" if predicted_disease == "Healthy" else "disease-box"
 
-            # Alerta según severidad
-            if predicted_disease == "Healthy":
-                st.success("✅ ¡Excelente! La planta está saludable. Continúa con las prácticas actuales.")
-            elif predicted_disease == "Sigatoka":
-                st.error("🚨 ATENCIÓN URGENTE: Sigatoka detectada. Requiere tratamiento inmediato.")
-            else:
-                st.warning(f"⚠️ Se detectó {predicted_disease}. Se recomienda iniciar tratamiento.")
+                    st.markdown(f"""
+                    <div class='{box_class}'>
+                        <h1 style='font-size: 48px; margin: 0;'>{disease_data['icon']}</h1>
+                        <h2 style='margin: 10px 0;'>{predicted_disease}</h2>
+                        <h3 style='margin: 5px 0;'>Confianza: {confidence:.1f}%</h3>
+                        <p style='font-style: italic; margin-top: 10px;'>{disease_data['nombre_cientifico']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            # ========== INFORMACIÓN DE LA ENFERMEDAD ==========
-            st.markdown("---")
-            st.markdown("## 📚 Información Detallada")
+                    # Alerta según severidad
+                    if predicted_disease == "Healthy":
+                        st.success("✅ ¡Excelente! La planta está saludable. Continúa con las prácticas actuales.")
+                    elif predicted_disease == "Sigatoka":
+                        st.error("🚨 ATENCIÓN URGENTE: Sigatoka detectada. Requiere tratamiento inmediato.")
+                    else:
+                        st.warning(f"⚠️ Se detectó {predicted_disease}. Se recomienda iniciar tratamiento.")
 
-            with st.expander("ℹ️ Descripción de la enfermedad", expanded=True):
-                st.markdown(disease_data["descripcion"])
-                st.markdown(f"**Nivel de severidad:** {disease_data['severidad']}")
+                    # ========== INFORMACIÓN DE LA ENFERMEDAD ==========
+                    st.markdown("---")
+                    st.markdown("## 📚 Información Detallada")
 
-            with st.expander("🔍 Síntomas característicos"):
-                for sintoma in disease_data["sintomas"]:
-                    st.markdown(f"- {sintoma}")
+                    with st.expander("ℹ️ Descripción de la enfermedad", expanded=True):
+                        st.markdown(disease_data["descripcion"])
+                        st.markdown(f"**Nivel de severidad:** {disease_data['severidad']}")
 
-            # ========== TRATAMIENTOS RECOMENDADOS ==========
-            st.markdown("---")
-            st.markdown("## 💊 Plan de Tratamiento Recomendado")
+                    with st.expander("🔍 Síntomas característicos"):
+                        for sintoma in disease_data["sintomas"]:
+                            st.markdown(f"- {sintoma}")
 
-            for categoria, tratamientos in disease_data["tratamiento"].items():
-                with st.expander(f"📋 {categoria.upper().replace('_', ' ')}", expanded=True):
-                    for tratamiento in tratamientos:
-                        st.markdown(f"{tratamiento}")
+                    # ========== TRATAMIENTOS RECOMENDADOS ==========
+                    st.markdown("---")
+                    st.markdown("## 💊 Plan de Tratamiento Recomendado")
 
-            # ========== ADVERTENCIAS ==========
-            st.markdown("---")
-            st.markdown('<div class="warning-card">', unsafe_allow_html=True)
-            st.markdown("""
-                ⚠️ **ADVERTENCIAS IMPORTANTES:**
-                - Siempre usa equipo de protección personal (EPP) al aplicar productos químicos
-                - Respeta los períodos de carencia antes de la cosecha
-                - Alterna productos para evitar resistencia
-                - Consulta con un ingeniero agrónomo para casos severos
-                - Mantén registro de todas las aplicaciones
-                """)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    for categoria, tratamientos in disease_data["tratamiento"].items():
+                        with st.expander(f"📋 {categoria.upper().replace('_', ' ')}", expanded=True):
+                            for tratamiento in tratamientos:
+                                st.markdown(f"{tratamiento}")
 
-            # ========== BOTÓN DE DESCARGA ==========
-            st.markdown("---")
-            report = f"""
-                REPORTE DE DIAGNÓSTICO - SISTEMA DE DETECCIÓN DE ENFERMEDADES DEL BANANO
-                ========================================================================
+                    # ========== ADVERTENCIAS ==========
+                    st.markdown("---")
+                    st.markdown('<div class="warning-card">', unsafe_allow_html=True)
+                    st.markdown("""
+                    ⚠️ **ADVERTENCIAS IMPORTANTES:**
+                    - Siempre usa equipo de protección personal (EPP) al aplicar productos químicos
+                    - Respeta los períodos de carencia antes de la cosecha
+                    - Alterna productos para evitar resistencia
+                    - Consulta con un ingeniero agrónomo para casos severos
+                    - Mantén registro de todas las aplicaciones
+                    """)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-                RESULTADO DEL ANÁLISIS:
-                - Enfermedad detectada: {predicted_disease}
-                - Confianza: {confidence:.2f}%
-                - Nombre científico: {disease_data['nombre_cientifico']}
-                - Severidad: {disease_data['severidad']}
+                    # ========== BOTÓN DE DESCARGA ==========
+                    st.markdown("---")
+                    report = f"""
+REPORTE DE DIAGNÓSTICO - SISTEMA DE DETECCIÓN DE ENFERMEDADES DEL BANANO
+========================================================================
 
-                DESCRIPCIÓN:
-                {disease_data['descripcion']}
+RESULTADO DEL ANÁLISIS:
+- Enfermedad detectada: {predicted_disease}
+- Confianza: {confidence:.2f}%
+- Nombre científico: {disease_data['nombre_cientifico']}
+- Severidad: {disease_data['severidad']}
 
-                SÍNTOMAS:
-                {chr(10).join(['- ' + s for s in disease_data['sintomas']])}
+DESCRIPCIÓN:
+{disease_data['descripcion']}
 
-                TRATAMIENTOS RECOMENDADOS:
-                """
+SÍNTOMAS:
+{chr(10).join(['- ' + s for s in disease_data['sintomas']])}
 
-            for cat, treats in disease_data['tratamiento'].items():
-                report += f"\n{cat.upper()}:\n"
-                report += '\n'.join(['  ' + t for t in treats]) + '\n'
+TRATAMIENTOS RECOMENDADOS:
+"""
 
-            st.download_button(
-                label="📄 Descargar Reporte Completo (TXT)",
-                data=report,
-                file_name=f"reporte_{predicted_disease}_{time.strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
+                    for cat, treats in disease_data['tratamiento'].items():
+                        report += f"\n{cat.upper()}:\n"
+                        report += '\n'.join(['  ' + t for t in treats]) + '\n'
 
-
-
+                    st.download_button(
+                        label="📄 Descargar Reporte Completo (TXT)",
+                        data=report,
+                        file_name=f"reporte_{predicted_disease}_{time.strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
 
 # ========== FOOTER ==========
 st.markdown("---")
 st.markdown("""
     <div style='text-align: center; padding: 30px; color: #888;'>
         <p style='font-size: 16px;'>🍌 Sistema de Detección de Enfermedades del Banano</p>
-        <p>Desarrollado con ❤️ usando Deep Learning | TensorFlow + Streamlit</p>
+        <p>Desarrollado usando Deep Learning | TensorFlow + Streamlit</p>
         <p style='font-size: 12px; margin-top: 10px;'>© 2025 - Todos los derechos reservados</p>
     </div>
 """, unsafe_allow_html=True)
-
-
