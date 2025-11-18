@@ -38,6 +38,7 @@ venv\Scripts\activate  # Windows
 
 # 3. Instalar dependencias
 pip install -r requirements.txt
+pip install tensorflow==2.15.0
 
 # 4. Descargar dataset (opcional, para entrenar)
 cd datasets

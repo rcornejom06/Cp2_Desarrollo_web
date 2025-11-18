@@ -1,6 +1,6 @@
 """
 🍌 Sistema de Detección de Enfermedades del Banano
-Interfaz web con Streamlit
+Compatible con Teachable Machine
 """
 
 import streamlit as st
@@ -11,15 +11,24 @@ from tensorflow.keras.models import load_model
 import time
 import os
 
-# ========== CONFIGURACIÓN DE LA PÁGINA ==========
+# ========== CONFIGURACIÓN ==========
 st.set_page_config(
-    page_title="Detección de Enfermedades del Banano",  # Corregido: "Detección" no "Detencion"
+    page_title="Detección de Enfermedades del Banano",
     page_icon="🍌",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ========== ESTILOS CSS ==========
+
+#Configuración de la pagina
+
+st.set_page_config(
+    page_title="Detencion de Enfermedades del Banano",
+    page_icon="🍌",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 st.markdown("""
     <style>
     .main {
@@ -72,15 +81,13 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# ========== INFORMACIÓN DETALLADA DE ENFERMEDADES ==========
-DISEASE_INFO = {
+DISEASE_INFO ={
     "Cordana": {
-        "icon": "🟤",
-        "color": "#8B4513",
-        "nombre_cientifico": "Cordana musae",  # Corregido: "Cordana" no "Cordama"
+        "icon" : "🟤",
+        "color" : "#8B4513",
+        "nombre_cientifico" : "Cordama musae",
         "descripcion": """
-        La **Cordana** es una enfermedad fúngica que causa manchas foliares en las hojas del banano. 
+        La *Cordana* es una enfermedad fúngica que causa manchas foliares en las hojas del banano. 
         Se caracteriza por lesiones ovaladas con centro gris y bordes amarillentos.
         """,
         "sintomas": [
@@ -98,15 +105,15 @@ DISEASE_INFO = {
                 "🗑️ Eliminar residuos vegetales del suelo"
             ],
             "quimico": [
-                "🧪 Aplicar fungicidas a base de **Mancozeb** (2-3 g/L de agua)",
-                "🧪 Usar **Clorotalonil** en dosis de 2 ml/L de agua",
-                "🧪 Alternar con **Azoxystrobin** para evitar resistencia",
+                "🧪 Aplicar fungicidas a base de *Mancozeb* (2-3 g/L de agua)",
+                "🧪 Usar *Clorotalonil* en dosis de 2 ml/L de agua",
+                "🧪 Alternar con *Azoxystrobin* para evitar resistencia",
                 "📅 Aplicar cada 10-14 días durante época lluviosa",
                 "⚠️ Rotar productos para prevenir resistencia del hongo"
             ],
             "organico": [
-                "🌿 Extracto de **ajo** (100g de ajo/litro de agua)",
-                "🍃 Té de **cola de caballo** como fungicida natural",
+                "🌿 Extracto de *ajo* (100g de ajo/litro de agua)",
+                "🍃 Té de *cola de caballo* como fungicida natural",
                 "🧴 Bicarbonato de sodio (5g/L) + aceite vegetal",
                 "🌱 Compost bien descompuesto para fortalecer la planta"
             ],
@@ -126,7 +133,7 @@ DISEASE_INFO = {
         "color": "#2C3E50",
         "nombre_cientifico": "Mycosphaerella fijiensis (Sigatoka Negra) / Mycosphaerella musicola (Sigatoka Amarilla)",
         "descripcion": """
-        La **Sigatoka** es una de las enfermedades más devastadoras del banano a nivel mundial. 
+        La *Sigatoka* es una de las enfermedades más devastadoras del banano a nivel mundial. 
         Reduce la capacidad fotosintética de la planta y puede disminuir la producción hasta en un 50%.
         """,
         "sintomas": [
@@ -145,22 +152,22 @@ DISEASE_INFO = {
                 "📏 Mantener densidad de siembra adecuada (1,600-2,000 plantas/ha)"
             ],
             "quimico": [
-                "🧪 **Triazoles**: Propiconazole (0.3-0.5 ml/L) o Difenoconazole",
-                "🧪 **Estrobilurinas**: Azoxystrobin (0.8-1 ml/L)",
-                "🧪 **Mancozeb** como protectante (2-3 g/L)",
-                "🧪 **Aceite mineral** (10-15 ml/L) como adherente",
+                "🧪 *Triazoles*: Propiconazole (0.3-0.5 ml/L) o Difenoconazole",
+                "🧪 *Estrobilurinas*: Azoxystrobin (0.8-1 ml/L)",
+                "🧪 *Mancozeb* como protectante (2-3 g/L)",
+                "🧪 *Aceite mineral* (10-15 ml/L) como adherente",
                 "📅 Programa de 8-12 ciclos por año según presión de enfermedad",
                 "🔄 Rotación estricta de ingredientes activos",
-                "⚠️ **CRÍTICO**: Aplicar antes de que aparezcan síntomas"
+                "⚠️ *CRÍTICO*: Aplicar antes de que aparezcan síntomas"
             ],
             "biologico": [
-                "🦠 **Bacillus subtilis** (concentración según fabricante)",
-                "🍄 **Trichoderma harzianum** aplicado al suelo",
-                "🌿 Extractos de **nim (Neem)** al 2-3%"
+                "🦠 *Bacillus subtilis* (concentración según fabricante)",
+                "🍄 *Trichoderma harzianum* aplicado al suelo",
+                "🌿 Extractos de *nim (Neem)* al 2-3%"
             ],
             "calendario": [
-                "📅 **Época lluviosa**: Aplicaciones cada 7-10 días",
-                "☀️ **Época seca**: Aplicaciones cada 14-21 días",
+                "📅 *Época lluviosa*: Aplicaciones cada 7-10 días",
+                "☀️ *Época seca*: Aplicaciones cada 14-21 días",
                 "🔍 Monitoreo de estado de evolución semanal",
                 "📊 Ajustar según índice de infección"
             ]
@@ -174,7 +181,7 @@ DISEASE_INFO = {
         "color": "#FFD700",
         "nombre_cientifico": "Pestalotiopsis spp.",
         "descripcion": """
-        **Pestalotiopsis** causa manchas foliares y puede afectar también frutos y tallos. 
+        *Pestalotiopsis* causa manchas foliares y puede afectar también frutos y tallos. 
         Se desarrolla en condiciones de alta humedad y puede causar pérdidas económicas significativas.
         """,
         "sintomas": [
@@ -193,22 +200,22 @@ DISEASE_INFO = {
                 "🌤️ Mejorar circulación de aire en la plantación"
             ],
             "quimico": [
-                "🧪 **Mancozeb** (2.5-3 g/L) como protectante",
-                "🧪 **Clorotalonil** (2-2.5 ml/L)",
-                "🧪 **Carbendazim** (1 g/L) - sistémico",
-                "🧪 **Tiofanato metílico** (1-1.5 g/L)",
+                "🧪 *Mancozeb* (2.5-3 g/L) como protectante",
+                "🧪 *Clorotalonil* (2-2.5 ml/L)",
+                "🧪 *Carbendazim* (1 g/L) - sistémico",
+                "🧪 *Tiofanato metílico* (1-1.5 g/L)",
                 "📅 Aplicar cada 10-15 días",
                 "🌧️ Reaplicar después de lluvias fuertes"
             ],
             "organico": [
-                "🌿 Extracto de **canela** (fungicida natural)",
+                "🌿 Extracto de *canela* (fungicida natural)",
                 "🧄 Solución de ajo + jabón potásico",
-                "🍃 Extracto de **ortiga** para fortalecer defensas",
-                "🌱 Purín de **cola de caballo**"
+                "🍃 Extracto de *ortiga* para fortalecer defensas",
+                "🌱 Purín de *cola de caballo*"
             ],
             "nutricional": [
-                "🌱 Aplicar **Silicio** para fortalecer tejidos",
-                "🍃 **Calcio** foliar para endurecer hojas",
+                "🌱 Aplicar *Silicio* para fortalecer tejidos",
+                "🍃 *Calcio* foliar para endurecer hojas",
                 "💊 Microelementos (Zn, Mn, Cu) vía foliar",
                 "🌿 Bioestimulantes a base de algas marinas"
             ]
@@ -222,7 +229,7 @@ DISEASE_INFO = {
         "color": "#4CAF50",
         "nombre_cientifico": "N/A",
         "descripcion": """
-        ¡Excelente! La planta se encuentra **saludable** sin signos visibles de enfermedad. 
+        ¡Excelente! La planta se encuentra *saludable* sin signos visibles de enfermedad. 
         Mantén las prácticas culturales actuales para preservar este estado.
         """,
         "sintomas": [
@@ -240,8 +247,8 @@ DISEASE_INFO = {
                 "📊 Mantener registros de campo actualizados"
             ],
             "nutricional": [
-                "🌱 **NPK** equilibrado según etapa fenológica",
-                "💊 **Calcio y Magnesio** para vigor",
+                "🌱 *NPK* equilibrado según etapa fenológica",
+                "💊 *Calcio y Magnesio* para vigor",
                 "🍃 Microelementos (Fe, Zn, Mn, B)",
                 "🌿 Aplicación de materia orgánica",
                 "📅 Análisis de suelo cada 6 meses"
@@ -265,76 +272,78 @@ DISEASE_INFO = {
     }
 }
 
-# ========== FUNCIONES ==========
+# ========== FUNCIONES PARA TEACHABLE MACHINE ==========
 
 @st.cache_resource
-def load_trained_model():
-    """Carga el modelo entrenado con manejo de compatibilidad"""
+def load_teachable_machine_model():
+    """Carga modelo de Teachable Machine"""
+    model_path = 'models/keras_model.h5'
+    labels_path = 'models/labels.txt'
 
-    # Buscar modelos disponibles
-    model_paths = [
-        'models/keras_model.h5'
-    ]
+    if not os.path.exists(model_path):
+        st.error(f"❌ No se encontró: {model_path}")
+        return None, None
 
-    for model_path in model_paths:
-        if not os.path.exists(model_path):
-            continue
+    try:
+        # Cargar modelo
+        model = load_model(model_path, compile=False)
+        # Recompilar
+        model.compile(
+            optimizer='adam',
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
 
-        try:
-            # Intentar cargar sin compilar (para compatibilidad)
-            model = load_model(model_path, compile=False)
+        # Cargar labels
+        class_names = []
+        if os.path.exists(labels_path):
+            with open(labels_path, 'r', encoding='utf-8') as f:
+                class_names = [line.strip().split(' ', 1)[1] for line in f.readlines()]
+        else:
+            # Si no existe labels.txt, usar orden por defecto
+            class_names = ['Cordana', 'Healthy', 'Pestalotiopsis', 'Sigatoka']
+            st.sidebar.warning("⚠️ labels.txt no encontrado, usando orden por defecto")
 
-            # Recompilar manualmente
-            model.compile(
-                optimizer='adam',
-                loss='categorical_crossentropy',
-                metrics=['accuracy']
-            )
+        st.sidebar.success(f"✅ Modelo cargado: Teachable Machine")
+        st.sidebar.info(f"🏷️ Clases: {', '.join(class_names)}")
 
-            st.sidebar.success(f"✅ Modelo cargado: {model_path}")
-            return model
+        return model, class_names
 
-        except Exception as e:
-            st.sidebar.warning(f"⚠️ Error con {model_path}: {str(e)[:50]}...")
-            continue
-
-    # Si ninguno funcionó
-    return None
+    except Exception as e:
+        st.sidebar.error(f"❌ Error: {e}")
+        return None, None
 
 
-def preprocess_image(image):
-    """Preprocesa la imagen para el modelo"""
+def preprocess_image_teachable_machine(image):
 
     try:
         # 1. Convertir a RGB
         if image.mode != 'RGB':
             rgb_image = Image.new('RGB', image.size, (255, 255, 255))
-
             if image.mode == 'RGBA':
                 rgb_image.paste(image, (0, 0), image)
             else:
                 rgb_image.paste(image.convert('RGB'))
-
             image = rgb_image
 
-        # 2. Redimensionar
-        img = image.resize((224, 224), Image.Resampling.LANCZOS)
+        # 2. Redimensionar a 224x224 (Teachable Machine size)
+        image = image.resize((224, 224), Image.Resampling.LANCZOS)
 
         # 3. Convertir a numpy array
-        img_array = np.array(img, dtype=np.float32)
+        img_array = np.array(image, dtype=np.float32)
 
-        # 4. Verificar que solo tenga 3 canales
-        if len(img_array.shape) == 3 and img_array.shape[2] == 4:
-            img_array = img_array[:, :, :3]
+        # 4. Verificar dimensiones
+        if img_array.shape != (224, 224, 3):
+            raise ValueError(f"Shape incorrecto: {img_array.shape}")
 
-        # 5. Verificar dimensiones
-        assert img_array.shape == (224, 224, 3), f"Shape incorrecto: {img_array.shape}"
-
-        # 6. Normalizar
+        # 5. Normalizar [0, 255] -> [0, 1]
         img_array = img_array / 255.0
 
-        # 7. Añadir dimensión de batch
+        # 6. Añadir dimensión de batch
         img_array = np.expand_dims(img_array, axis=0)
+
+        # 7. Teachable Machine a veces espera float32
+        img_array = img_array.astype(np.float32)
 
         return img_array
 
@@ -343,29 +352,8 @@ def preprocess_image(image):
         return None
 
 
-# ========== SIDEBAR ==========
-with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/banana.png", width=100)
-    st.header("ℹ️ Información")
-    st.markdown("""
-    ### Enfermedades detectables:
-    - 🟤 **Cordana**
-    - 🟢 **Healthy** (Saludable)
-    - 🟡 **Pestalotiopsis**
-    - ⚫ **Sigatoka**
-    
-    ### Cómo usar:
-    1. Sube una imagen de hoja de banano
-    2. Presiona "Analizar Imagen"
-    3. Obtén diagnóstico y tratamiento
-    
-    ---
-    **Desarrollado por:** Roger Cornejo  
-    **Universidad:** [Tu Universidad]  
-    **Año:** 2025
-    """)
+model, CLASS_NAMES = load_teachable_machine_model()
 
-# ========== TÍTULO PRINCIPAL ==========
 st.markdown("""
     <h1>🍌 Sistema Inteligente de Detección de Enfermedades del Banano</h1>
     <p style='text-align: center; font-size: 18px; color: #555; margin-bottom: 30px;'>
@@ -389,7 +377,6 @@ with col1:
         image = Image.open(uploaded_file)
         st.image(image, caption="✅ Imagen cargada correctamente", use_container_width=True)
 
-        # Info de imagen
         st.markdown(f"""
         <div style='background: white; padding: 15px; border-radius: 10px; margin-top: 10px;'>
             <b>📏 Resolución:</b> {image.size[0]} x {image.size[1]} px<br>
@@ -404,18 +391,15 @@ with col2:
     if uploaded_file is None:
         st.info("👈 Por favor, sube una imagen en el panel izquierdo para comenzar")
     else:
-        model = load_trained_model()
-
-        if model is None:
+        if model is None or CLASS_NAMES is None:
             st.error("""
             ⚠️ **Modelo no encontrado**
-            
-            Necesitas entrenar el modelo primero:
-```bash
-            python entrenamiento.py
-```
-            
-            O verifica que exista: `models/best_model.h5` o `models/best_model.keras`
+
+            Asegúrate de tener estos archivos en la carpeta `models/`:
+            - `keras_model.h5` (el modelo de Teachable Machine)
+            - `labels.txt` (los nombres de las clases)
+
+            Descarga ambos desde Teachable Machine.
             """)
         else:
             if st.button("🔍 ANALIZAR IMAGEN", type="primary", use_container_width=True):
@@ -429,7 +413,7 @@ with col2:
                 time.sleep(0.3)
 
                 status_text.text("🔬 Preprocesando datos...")
-                img_array = preprocess_image(image)
+                img_array = preprocess_image_teachable_machine(image)
 
                 if img_array is None:
                     st.error("No se pudo procesar la imagen")
@@ -440,17 +424,42 @@ with col2:
                     time.sleep(0.3)
 
                     status_text.text("🤖 Ejecutando modelo de IA...")
+
+                    # Predecir
                     predictions = model.predict(img_array, verbose=0)
+
                     progress_bar.progress(70)
                     time.sleep(0.3)
 
                     status_text.text("📊 Analizando resultados...")
-                    predicted_class_idx = np.argmax(predictions)
+
+                    # Obtener clase predicha
+                    predicted_class_idx = np.argmax(predictions[0])
                     confidence = predictions[0][predicted_class_idx] * 100
 
-                    disease_names = list(DISEASE_INFO.keys())
-                    predicted_disease = disease_names[predicted_class_idx]
-                    disease_data = DISEASE_INFO[predicted_disease]
+                    # Obtener nombre de la enfermedad
+                    predicted_disease = CLASS_NAMES[predicted_class_idx]
+
+                    # Verificar que existe en DISEASE_INFO
+                    if predicted_disease not in DISEASE_INFO:
+                        st.error(f"❌ Clase '{predicted_disease}' no encontrada")
+                        st.write(f"Clases del modelo: {CLASS_NAMES}")
+                        st.write(f"Clases en DISEASE_INFO: {list(DISEASE_INFO.keys())}")
+
+                        # Intentar mapear
+                        mapping = {
+                            'cordana': 'Cordana',
+                            'healthy': 'Healthy',
+                            'pestalotiopsis': 'Pestalotiopsis',
+                            'sigatoka': 'Sigatoka'
+                        }
+                        predicted_disease = mapping.get(predicted_disease.lower(), predicted_disease)
+
+                    disease_data = DISEASE_INFO.get(predicted_disease)
+
+                    if disease_data is None:
+                        st.error(f"No hay información para: {predicted_disease}")
+                        st.stop()
 
                     progress_bar.progress(100)
                     status_text.text("✅ ¡Análisis completado!")
@@ -458,6 +467,12 @@ with col2:
 
                     progress_bar.empty()
                     status_text.empty()
+
+                    # ========== MOSTRAR TODAS LAS PROBABILIDADES ==========
+                    st.markdown("### 📊 Probabilidades de cada clase:")
+                    for i, class_name in enumerate(CLASS_NAMES):
+                        prob = predictions[0][i] * 100
+                        st.progress(prob / 100, text=f"{class_name}: {prob:.2f}%")
 
                     # ========== RESULTADO PRINCIPAL ==========
                     box_class = "healthy-box" if predicted_disease == "Healthy" else "disease-box"
@@ -471,15 +486,16 @@ with col2:
                     </div>
                     """, unsafe_allow_html=True)
 
-                    # Alerta según severidad
-                    if predicted_disease == "Healthy":
-                        st.success("✅ ¡Excelente! La planta está saludable. Continúa con las prácticas actuales.")
-                    elif predicted_disease == "Sigatoka":
-                        st.error("🚨 ATENCIÓN URGENTE: Sigatoka detectada. Requiere tratamiento inmediato.")
-                    else:
-                        st.warning(f"⚠️ Se detectó {predicted_disease}. Se recomienda iniciar tratamiento.")
+                    # ... (resto del código de visualización igual) ...
 
-                    # ========== INFORMACIÓN DE LA ENFERMEDAD ==========
+                    if predicted_disease == "Healthy":
+                        st.success("✅ ¡Excelente! La planta está saludable.")
+                    elif predicted_disease == "Sigatoka":
+                        st.error("🚨 ATENCIÓN URGENTE: Sigatoka detectada.")
+                    else:
+                        st.warning(f"⚠️ Se detectó {predicted_disease}.")
+
+                    # Información detallada
                     st.markdown("---")
                     st.markdown("## 📚 Información Detallada")
 
@@ -491,7 +507,6 @@ with col2:
                         for sintoma in disease_data["sintomas"]:
                             st.markdown(f"- {sintoma}")
 
-                    # ========== TRATAMIENTOS RECOMENDADOS ==========
                     st.markdown("---")
                     st.markdown("## 💊 Plan de Tratamiento Recomendado")
 
@@ -500,58 +515,12 @@ with col2:
                             for tratamiento in tratamientos:
                                 st.markdown(f"{tratamiento}")
 
-                    # ========== ADVERTENCIAS ==========
-                    st.markdown("---")
-                    st.markdown('<div class="warning-card">', unsafe_allow_html=True)
-                    st.markdown("""
-                    ⚠️ **ADVERTENCIAS IMPORTANTES:**
-                    - Siempre usa equipo de protección personal (EPP) al aplicar productos químicos
-                    - Respeta los períodos de carencia antes de la cosecha
-                    - Alterna productos para evitar resistencia
-                    - Consulta con un ingeniero agrónomo para casos severos
-                    - Mantén registro de todas las aplicaciones
-                    """)
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-                    # ========== BOTÓN DE DESCARGA ==========
-                    st.markdown("---")
-                    report = f"""
-REPORTE DE DIAGNÓSTICO - SISTEMA DE DETECCIÓN DE ENFERMEDADES DEL BANANO
-========================================================================
-
-RESULTADO DEL ANÁLISIS:
-- Enfermedad detectada: {predicted_disease}
-- Confianza: {confidence:.2f}%
-- Nombre científico: {disease_data['nombre_cientifico']}
-- Severidad: {disease_data['severidad']}
-
-DESCRIPCIÓN:
-{disease_data['descripcion']}
-
-SÍNTOMAS:
-{chr(10).join(['- ' + s for s in disease_data['sintomas']])}
-
-TRATAMIENTOS RECOMENDADOS:
-"""
-
-                    for cat, treats in disease_data['tratamiento'].items():
-                        report += f"\n{cat.upper()}:\n"
-                        report += '\n'.join(['  ' + t for t in treats]) + '\n'
-
-                    st.download_button(
-                        label="📄 Descargar Reporte Completo (TXT)",
-                        data=report,
-                        file_name=f"reporte_{predicted_disease}_{time.strftime('%Y%m%d_%H%M%S')}.txt",
-                        mime="text/plain",
-                        use_container_width=True
-                    )
-
-# ========== FOOTER ==========
+# Footer
 st.markdown("---")
 st.markdown("""
     <div style='text-align: center; padding: 30px; color: #888;'>
         <p style='font-size: 16px;'>🍌 Sistema de Detección de Enfermedades del Banano</p>
-        <p>Desarrollado usando Deep Learning | TensorFlow + Streamlit</p>
-        <p style='font-size: 12px; margin-top: 10px;'>© 2025 - Todos los derechos reservados</p>
+        <p>Desarrollado con ❤️ usando Teachable Machine + Streamlit</p>
+        <p style='font-size: 12px; margin-top: 10px;'>© 2025</p>
     </div>
 """, unsafe_allow_html=True)
